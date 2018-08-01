@@ -19,27 +19,33 @@ node;
 
 // Declare the hash table
 node *dict_ht[HT_LENGTH];
+int HT_SIZE = 0;
+
+node *dict_ptrs[143091];
+int dict_ptrs_index = 0;
 
 // hash function is returning the first char's place in the alphabet
-int get_hash(char *word)
+int get_hash(const char *word)
 {
-    return toupper(word[0]) - 65;
+    unsigned int hash = 0;
+    for (int i = 0; i < strlen(word); ++i)
+    {
+        hash = 31 * hash + toupper(word[i]);
+    }
+    return hash % HT_LENGTH;
 }
 
 // Returns true if word is in dictionary else false
 bool check(const char *word)
 {
-    for (int i = 0; i < HT_LENGTH; i++)
+    node *cursor = dict_ht[get_hash(word)];
+    while (cursor != NULL)
     {
-        node *cursor = dict_ht[i];
-        while (cursor != NULL)
+        if (strcasecmp(word, cursor -> word) == 0)
         {
-            if (strcasecmp(word, cursor -> word) == 0)
-            {
-                return true;
-            }
-            cursor = cursor -> next;
+            return true;
         }
+        cursor = cursor -> next;
     }
     return false;
 }
@@ -68,6 +74,8 @@ bool load(const char *dictionary)
         int hash = get_hash(word);
         new_node -> next = dict_ht[hash];
         dict_ht[hash] = new_node;
+        dict_ptrs[dict_ptrs_index++] = new_node;
+        HT_SIZE++;
     }
     fclose(dict_ptr);
     return true;
@@ -76,31 +84,15 @@ bool load(const char *dictionary)
 // Returns number of words in dictionary if loaded else 0 if not yet loaded
 unsigned int size(void)
 {
-    int count = 0;
-    for (int i = 0; i < HT_LENGTH; i++)
-    {
-        node *cursor = dict_ht[i];
-        while (cursor != NULL)
-        {
-            count++;
-            cursor = cursor -> next;
-        }
-    }
-    return count;
+    return HT_SIZE;
 }
 
 // Unloads dictionary from memory, returning true if successful else false
 bool unload(void)
 {
-    for (int i = 0; i < HT_LENGTH; i++)
+    for (int i = 0; i < dict_ptrs_index; i++)
     {
-        node *cursor = dict_ht[i];
-        while (cursor != NULL)
-        {
-            node *temp = cursor;
-            cursor = cursor -> next;
-            free(temp);
-        }
+        free(dict_ptrs[i]);
     }
     return true;
 }
