@@ -4,9 +4,14 @@
 
     <div class="col">
         <form action="/compare" enctype="multipart/form-data" method="post">
-
-            <!-- TODO -->
-
+            <input name="file1" value="file1" type="file"/>
+            <input name="file2" value="file2" type="file"/>
+            <select name="algorithm">
+                <option value="lines">lines</option>
+                <option value="sentences">sentences</option>
+                <option value="substrings">substrings</option>
+            </select>
+            <input type="submit" value="register"/>
         </form>
     </div>
 
