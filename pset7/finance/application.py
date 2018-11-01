@@ -6,6 +6,7 @@ from flask_session import Session
 from tempfile import mkdtemp
 from werkzeug.exceptions import default_exceptions
 from werkzeug.security import check_password_hash, generate_password_hash
+import math
 
 from helpers import apology, login_required, lookup, usd, transaction_types
 
@@ -58,22 +59,28 @@ def buy():
         return render_template("buy.html")
     if request.method == "POST":
         if not request.form.get("symbol") or not request.form.get("shares"):
-            return apology("Enter all inputs", 403)
+            return apology("Enter all inputs", 400)
 
         symbol = request.form.get("symbol")
-        shares = int(request.form.get("shares"))
+        try:
+            shares = float(request.form.get("shares"))
+        except:
+            return apology("invalid number of shares", 400)
+        if not shares.is_integer() or shares < 1:
+            return apology("invalid number of shares", 400)
+
         user_id = session.get("user_id")
         cash = db.execute("SELECT cash FROM users WHERE id = :user_id",
                           user_id=user_id)[0]['cash']
         quote = lookup(symbol)
         if not quote:
-            return apology("Couldn't find symbol", 403)
+            return apology("Couldn't find symbol", 400)
         price = quote['price']
         purchase_cost = price * shares
         final_cash = cash - purchase_cost
 
         if final_cash < 0:
-            return apology("Not enough cash", 403)
+            return apology("Not enough cash", 400)
 
         db.execute("UPDATE users "
                    "SET cash = :final_cash "
@@ -108,9 +115,9 @@ def buy():
 
         data = {
             'symbol': symbol,
-            'shares': str(shares),
-            'purchase_cost': str(purchase_cost),
-            'final_cash': str(final_cash)
+            'shares': shares,
+            'purchase_cost': purchase_cost,
+            'final_cash': final_cash
         }
 
         return render_template("buy_success.html", **data)
@@ -185,11 +192,11 @@ def quote():
         return render_template("quote.html")
     elif request.method == "POST":
         if not request.form.get("symbol"):
-            return apology("must provide symbol", 403)
+            return apology("must provide symbol", 400)
 
         quote = lookup(request.form.get("symbol"))
 
-        return render_template("quoted.html", quote=quote) if quote else apology("Couldn't find symbol", 403)
+        return render_template("quoted.html", quote=quote) if quote else apology("Couldn't find symbol", 400)
 
 
 
@@ -198,15 +205,18 @@ def register():
     if request.method == "POST":
         # Ensure password is valid
         if request.form.get("confirmation") != request.form.get("password") or len(request.form.get("password")) < 1:
-            return apology("invalid password", 403)
+            return apology("invalid password", 400)
 
         # Ensure username was submitted
         if not request.form.get("username"):
-            return apology("must provide username", 403)
+            return apology("must provide username", 400)
 
         # Ensure password was submitted
         elif not request.form.get("password"):
-            return apology("must provide password", 403)
+            return apology("must provide password", 400)
+
+        if len(db.execute("SELECT * FROM users WHERE username = :username", username=request.form.get('username'))) > 0:
+            return apology("user already exists", 400)
 
         hash = generate_password_hash(request.form.get("password"), method="sha256", salt_length=8)
         db.execute("INSERT INTO users (username, hash) values (:username, :hash)",
@@ -252,8 +262,9 @@ def sell():
         if owned_shares < shares:
             return apology("you dont own that many shares", 400)
 
-        final_cash = shares * price
-        final_shares = owned_shares + shares
+        final_price = shares * price
+        final_cash = cash + final_price
+        final_shares = owned_shares - shares
 
         db.execute("UPDATE users "
                    "SET cash = :final_cash "
@@ -278,7 +289,8 @@ def sell():
             'shares': shares,
             'final_shares': final_shares,
             'price': price,
-            'final_cash': final_cash
+            'final_cash': final_cash,
+            'final_price': final_price
         }
 
         return render_template("sell_success.html", **data)

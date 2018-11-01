@@ -7,5 +7,5 @@
 {% block main %}
     <div>{{ quote.name }}</div>
     <div>{{ quote.symbol }}</div>
-    <div>{{ quote.price }}</div>
+    <div>{{ quote.price | usd}}</div>
 {% endblock %}

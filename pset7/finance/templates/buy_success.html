@@ -6,6 +6,6 @@
 
 {% block main %}
     <div>
-        <p>You bought {{ shares }} shares of {{ symbol }} for {{ purchase_cost }}. You now have {{ final_cash }}</p>
+        <p>You bought {{ shares }} shares of {{ symbol }} for {{ purchase_cost | usd }}. You now have {{ final_cash | usd }}</p>
     </div>
 {% endblock %}

@@ -5,5 +5,5 @@
 {% endblock %}
 
 {% block main %}
-    <p>You sold {{ shares }} shares of {{ symbol }} for {{ price }}. You now have {{ final_cash }} dollars and {{ final_shares }} shares</p>
+    <p>You sold {{ shares }} shares of {{ symbol }} at {{ price | usd }} for {{ final_price | usd }}. You now have {{ final_cash | usd }} dollars and {{ final_shares }} shares</p>
 {% endblock %}
