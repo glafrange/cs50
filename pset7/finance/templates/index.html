@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Index
+{% endblock %}
+
+{% block main %}
+    <h3>Owned Shares</h3>
+    <table class="table">
+        <tr>
+            <th scope="col">Symbol</th>
+            <th scope="col">Price</th>
+            <th scope="col">Shares</th>
+        </tr>
+        {% for stock in stocks %}
+            <tr>
+                <th>{{ stock['symbol'] }}</th>
+                <th>{{ stock['price'] }}</th>
+                <th>{{ stock['shares'] }}</th>
+            </tr>
+        {% endfor %}
+    </table>
+{% endblock %}
